@@ -11,6 +11,7 @@ RewriteRule ^checkout/?$ checkout.php [L]
 RewriteRule ^login/?$ login.php [L]
 RewriteRule ^register/?$ register.php [L]
 RewriteRule ^admin(.*)$ admin/$1 [L]
+RewriteRule ^([a-z0-9-]+)/?$ $1.php [L]
 
 # Protect uploads from execution
 RewriteRule ^uploads/.*\.(php|php5|php7|phtml)$ - [F]

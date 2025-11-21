@@ -1,9 +1,5 @@
 <?php 
-session_start();
-require 'includes/db.php'; 
 include 'header.php'; 
-
-// Fetch 4 featured products for hero
 $featured = $pdo->query("SELECT name, slug, main_image FROM products ORDER BY created_at DESC LIMIT 4")->fetchAll();
 
 // Fetch all products for grid
@@ -16,7 +12,7 @@ $products = $pdo->query("
 ?>
 
 <!-- HERO SECTION -->
-<section class="hero-section bg-white" style="padding-top: 100px; min-height: 95vh;">
+<section class="hero-section">
     <div class="container">
         <div class="row align-items-center g-5">
             <div class="col-lg-6">
@@ -30,8 +26,9 @@ $products = $pdo->query("
                     <?php foreach($featured as $f): ?>
                     <div class="col-6">
                         <a href="product.php?slug=<?= htmlspecialchars($f['slug']) ?>">
-                            <img src="uploads/products/<?= htmlspecialchars($f['main_image']) ?>" 
-                                 class="img-fluid hero-img shadow" 
+                            <!-- <img src="uploads/products/<?php //htmlspecialchars($f['main_image']) ?>"  -->
+                             <img src="uploads/products/T-shirt.jpg"
+                                 class="img-fluid hero-img hover-shadow" 
                                  alt="<?= htmlspecialchars($f['name']) ?>">
                         </a>
                     </div>
@@ -50,13 +47,13 @@ $products = $pdo->query("
             <p class="text-muted fs-5">Handpicked premium wear for you</p>
         </div>
 
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4 g-lg-5">
+        <div class="row row-cols-2 row-cols-md-2 row-cols-lg-3 g-4 g-lg-5">
             <?php foreach($products as $p): ?>
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
                     <a href="product.php?slug=<?= htmlspecialchars($p['slug']) ?>" class="text-decoration-none">
                         <div class="position-relative overflow-hidden">
-                            <img src="uploads/products/<?= htmlspecialchars($p['main_image']) ?>" 
+                            <img src="uploads/products/T-shirt.jpg" 
                                  class="card-img-top" 
                                  style="height: 380px; object-fit: cover; transition: transform 0.5s;"
                                  alt="<?= htmlspecialchars($p['name']) ?>">

@@ -1,3 +1,7 @@
+<?php
+session_start();
+require 'includes/db.php';
+?>
 <!-- header.php -->
 <!DOCTYPE html>
 <html lang="en">
@@ -8,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
     <style>
         :root {
             --gold: #d4af37;
@@ -31,7 +36,7 @@
 
 <nav class="navbar navbar-expand-lg fixed-top py-3">
     <div class="container">
-        <a class="navbar-brand fs-2 fw-bold text-gold" href="/">Royal Man</a>
+        <a class="navbar-brand fs-2 fw-bold text-gold" href="/Royal-Man">Royal Man</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -40,9 +45,9 @@
                 <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="#shop">Shop</a></li>
                 <li class="nav-item"><a class="nav-link" href="#new">New</a></li>
-                <li class="nav-item"><a class="nav-link" href="login.php">Login</a></li>
+                <li class="nav-item"><a class="nav-link" href="login">Login</a></li>
                 <li class="nav-item">
-                    <a href="cart.php" class="btn btn-outline-dark position-relative">
+                    <a href="cart" class="btn btn-outline-dark position-relative">
                         <i class="bi bi-bag"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3</span>
                     </a>
