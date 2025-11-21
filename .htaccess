@@ -1,0 +1,16 @@
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^$ index.php [L]
+RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L]
+RewriteRule ^product/([a-z0-9-]+)/?$ product.php?slug=$1 [L]
+RewriteRule ^cart/?$ cart.php [L]
+RewriteRule ^checkout/?$ checkout.php [L]
+RewriteRule ^login/?$ login.php [L]
+RewriteRule ^register/?$ register.php [L]
+RewriteRule ^admin(.*)$ admin/$1 [L]
+
+# Protect uploads from execution
+RewriteRule ^uploads/.*\.(php|php5|php7|phtml)$ - [F]

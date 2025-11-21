@@ -1,0 +1,31 @@
+Royal-Man/
+├── admin/
+│   ├── index.php          → Dashboard
+│   ├── login.php
+│   ├── categories.php
+│   ├── products.php
+│   ├── orders.php
+│   └── users.php
+├── assets/
+│   ├── css/custom.css
+│   └── js/custom.js
+├── includes/
+│   ├── header.php
+│   ├── footer.php
+│   ├── db.php
+│   ├── functions.php
+│   └── auth.php
+├── uploads/
+│   ├── products/          → 755 permissions
+│   └── categories/
+├── .htaccess
+├── config.php
+├── index.php              → Home
+├── category.php
+├── product.php
+├── cart.php
+├── checkout.php
+├── login.php
+├── register.php
+├── search.php
+└── order-success.php
