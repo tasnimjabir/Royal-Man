@@ -47,15 +47,15 @@ $products = $pdo->query("
             <p class="text-muted fs-5">Handpicked premium wear for you</p>
         </div>
 
-        <div class="row row-cols-2 row-cols-md-2 row-cols-lg-3 g-4 g-lg-5">
+        <div class="row row-cols-sm-2 row-cols-md-2 row-cols-lg-3 g-4 g-lg-5">
             <?php foreach($products as $p): ?>
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
                     <a href="product.php?slug=<?= htmlspecialchars($p['slug']) ?>" class="text-decoration-none">
                         <div class="position-relative overflow-hidden">
                             <img src="uploads/products/T-shirt.jpg" 
-                                 class="card-img-top" 
-                                 style="height: 380px; object-fit: cover; transition: transform 0.5s;"
+                                 class="card-img-top product-img" 
+                                 style="height: 380px; object-fit: cover;"
                                  alt="<?= htmlspecialchars($p['name']) ?>">
                             <div class="position-absolute top-0 start-0 p-3">
                                 <span class="badge bg-gold text-dark">New</span>

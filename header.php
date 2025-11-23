@@ -13,39 +13,36 @@ require 'includes/db.php';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
-    <style>
-        :root {
-            --gold: #d4af37;
-            --dark: #1a1a1a;
-            --light: #f8f9fa;
-        }
-        body { font-family: 'Inter', sans-serif; background: #fff; color: var(--dark); }
-        .navbar { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); box-shadow: 0 2px 20px rgba(0,0,0,0.05); }
-        .nav-link { color: #333 !important; font-weight: 500; }
-        .nav-link:hover, .nav-link.active { color: var(--gold) !important; }
-        .btn-gold { background: var(--gold); color: #000; font-weight: 600; border: none; }
-        .btn-gold:hover { background: #c19a2e; transform: translateY(-2px); }
-        .card { transition: all 0.3s; border: none; }
-        .card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important; }
-        h1, h2, h3 { font-family: 'Playfair Display', serif; }
-        .text-gold { color: var(--gold); }
-        .hero-img { height: 280px; object-fit: cover; border-radius: 12px; }
-    </style>
+
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg fixed-top py-3">
-    <div class="container">
+<nav class="navbar navbar-expand-lg fixed-top py-3 bg-white shadow-sm">
+    <div class="container position-relative">
+        <!-- Logo -->
         <a class="navbar-brand fs-2 fw-bold text-gold" href="/Royal-Man">Royal Man</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+        <!-- Mobile Menu Toggle -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
+
+        <!-- Desktop Menu -->
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto align-items-center gap-4">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="#shop">Shop</a></li>
-                <li class="nav-item"><a class="nav-link" href="#new">New</a></li>
-                <li class="nav-item"><a class="nav-link" href="login">Login</a></li>
+                <li class="nav-item"><a class="nav-link fw-500" href="/Royal-Man">Home</a></li>
+                <li class="nav-item"><a class="nav-link fw-500" href="#shop">Shop</a></li>
+                <li class="nav-item"><a class="nav-link fw-500" href="#new">New</a></li>
+                <li class="nav-item"><a class="nav-link fw-500" href="login">Login</a></li>
+
+                <!-- Search Icon Button (Only Icon) -->
+                <li class="nav-item">
+                    <button id="searchBtn" class="btn btn-link text-dark p-2">
+                        <i class="bi bi-search fs-4"></i>
+                    </button>
+                </li>
+
+                <!-- Cart -->
                 <li class="nav-item">
                     <a href="cart" class="btn btn-outline-dark position-relative">
                         <i class="bi bi-bag"></i>
@@ -53,6 +50,27 @@ require 'includes/db.php';
                     </a>
                 </li>
             </ul>
+        </div>
+
+        <!-- Full Search Overlay (Hidden by default) -->
+        <div id="searchOverlay" class="position-fixed top-0 start-0 w-100 h-100 bg-white d-flex align-items-center justify-content-center" style="z-index: 9999; display: none;">
+            <div class="w-100 px-4" style="max-width: 1000px;">
+                <div class="input_text d-flex align-items-center px-2">
+                    <i class="bi bi-search text-gold fs-3 me-3"></i>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="form-control form-control-lg border-0 shadow-none fs-3" 
+                        placeholder="Search T-shirts, Hoodies, Jackets..." 
+                        autofocus>
+                    <button id="closeSearch" class="btn btn-link text-dark ms-3">
+                        <i class="bi bi-x-lg fs-3"></i>
+                    </button>
+                </div>
+                <div class="mt-4 text-center text-muted" id="searchHint">
+                    Start typing to search products...
+                </div>
+            </div>
         </div>
     </div>
 </nav>
