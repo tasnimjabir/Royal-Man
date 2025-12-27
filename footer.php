@@ -17,6 +17,12 @@
             </div>
             <div class="col-md-4 text-md-end">
                 <p class="text-muted">&copy; 2025 Royal Man. All rights reserved.</p>
+                <?php if (!isset($_SESSION['user_id'])): ?>
+                    <div class="d-flex justify-content-center justify-content-md-end gap-2 mb-3">
+                        <a href="login.php" class="btn btn-outline-dark btn-sm px-4">Login</a>
+                        <a href="register.php" class="btn btn-dark btn-sm px-4">Sign Up</a>
+                    </div>
+                <?php endif; ?>
                 <div class="d-flex justify-content-center justify-content-md-end gap-3 mt-3">
                     <a href="#" class="text-dark fs-4"><i class="bi bi-instagram"></i></a>
                     <a href="#" class="text-dark fs-4"><i class="bi bi-facebook"></i></a>

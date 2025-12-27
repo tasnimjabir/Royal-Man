@@ -1,88 +1,331 @@
 <?php
 session_start();
-if (!isset($_SESSION['admin_id'])) header("Location: login.php");
+// ১. লগিন চেক (আপনার পাথ অনুযায়ী ঠিক আছে কিনা দেখে নেবেন)
+if (!isset($_SESSION['admin_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
 require '../includes/db.php';
 
-$cats = $pdo->query("SELECT * FROM categories")->fetchAll();
+// ক্যাটাগরি নিয়ে আসা
+$cats = $pdo->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 
+$error = '';
+$success = '';
+
+// ফর্ম সাবমিট হলে
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = $_POST['name'];
+    $name = trim($_POST['name']);
     $slug = preg_replace('/[^a-z0-9-]/', '-', strtolower($name));
+    // ডুপ্লিকেট হাইফেন রিমুভ করা
+    $slug = preg_replace('/-+/', '-', $slug); 
+    
     $desc = $_POST['description'];
     $price = $_POST['price'];
-    $cat_id = $_POST['category_id'];
+    $cat_id = !empty($_POST['category_id']) ? $_POST['category_id'] : null;
 
-    $main_image = '';
-    if ($_FILES['main_image']['size'] > 0) {
-        $ext = pathinfo($_FILES['main_image']['name'], PATHINFO_EXTENSION);
-        if (in_array($ext, ['jpg', 'jpeg', 'png']) && $_FILES['main_image']['size'] < 5000000) {
-            $main_image = time() . '.' . $ext;
-            move_uploaded_file($_FILES['main_image']['tmp_name'], '../uploads/products/' . $main_image);
-        } else {
-            $error = "Invalid main image (JPG/PNG, <5MB)";
-        }
+    // ভ্যালিডেশন
+    if (empty($name) || empty($price)) {
+        $error = "Product name and price are required.";
     }
 
-    if (!isset($error)) {
-        $stmt = $pdo->prepare("INSERT INTO products (name, slug, description, price, category_id, main_image) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $slug, $desc, $price, $cat_id, $main_image]);
+    // মেইন ইমেজ হ্যান্ডলিং
+    $main_image = '';
+    if (!$error && !empty($_FILES['main_image']['name'])) {
+        $file = $_FILES['main_image'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+        
+        if (in_array($ext, $allowed) && $file['size'] < 5000000) { // ৫MB
+            $main_image = time() . '_main.' . $ext;
+            // ফোল্ডার না থাকলে তৈরি করে নেবে
+            if (!is_dir('../uploads/products/')) mkdir('../uploads/products/', 0777, true);
+            
+            move_uploaded_file($file['tmp_name'], '../uploads/products/' . $main_image);
+        } else {
+            $error = "Main Image: Invalid format (jpg, png, webp) or too large (max 5MB).";
+        }
+    } elseif (!$error) {
+        $error = "Main image is required.";
+    }
 
-        $product_id = $pdo->lastInsertId();
+    // ডাটাবেসে ইনসার্ট
+    if (!$error) {
+        try {
+            $pdo->beginTransaction();
 
-        foreach ($_FILES['images']['name'] as $key => $img_name) {
-            if ($_FILES['images']['size'][$key] > 0) {
-                $img_ext = pathinfo($img_name, PATHINFO_EXTENSION);
-                if (in_array($img_ext, ['jpg', 'jpeg', 'png']) && $_FILES['images']['size'][$key] < 5000000) {
-                    $img_file = time() . '_' . $key . '.' . $img_ext;
-                    move_uploaded_file($_FILES['images']['tmp_name'][$key], '../uploads/products/' . $img_file);
-                    $pdo->prepare("INSERT INTO product_images (product_id, image) VALUES (?, ?)")->execute([$product_id, $img_file]);
+            $stmt = $pdo->prepare("INSERT INTO products (name, slug, description, price, category_id, main_image) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $slug, $desc, $price, $cat_id, $main_image]);
+            $product_id = $pdo->lastInsertId();
+
+            // গ্যালারি ইমেজ হ্যান্ডলিং (লুপ)
+            if (!empty($_FILES['images']['name'][0])) {
+                $files = $_FILES['images'];
+                $count = count($files['name']);
+                
+                $stmt_img = $pdo->prepare("INSERT INTO product_images (product_id, image) VALUES (?, ?)");
+
+                for ($i = 0; $i < $count; $i++) {
+                    if ($files['error'][$i] === 0) {
+                        $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+                        if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp']) && $files['size'][$i] < 5000000) {
+                            $filename = time() . "_{$product_id}_{$i}." . $ext;
+                            move_uploaded_file($files['tmp_name'][$i], '../uploads/products/' . $filename);
+                            
+                            $stmt_img->execute([$product_id, $filename]);
+                        }
+                    }
                 }
             }
-        }
 
-        header("Location: products.php");
-        exit;
+            $pdo->commit();
+            $success = "Product added successfully!";
+            
+            // ফর্ম ক্লিয়ার করার জন্য ভেরিয়েবল রিসেট
+            $name = $desc = $price = $cat_id = '';
+            
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $error = "Database Error: " . $e->getMessage();
+        }
     }
 }
 ?>
 
 <?php include '../includes/admin-header.php'; ?>
 
-<h2 class="mb-4">Add Product</h2>
-<?php if (isset($error)): ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
-<form method="POST" enctype="multipart/form-data" class="bg-white p-4 rounded shadow">
-    <div class="mb-3">
-        <label>Name</label>
-        <input type="text" name="name" class="form-control" required>
+<style>
+    /* কাস্টম স্টাইল UI সুন্দর করার জন্য */
+    .upload-area {
+        border: 2px dashed #cbd5e1;
+        border-radius: 10px;
+        background: #f8fafc;
+        transition: all 0.3s;
+        cursor: pointer;
+        position: relative;
+    }
+    .upload-area:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    .preview-card {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        height: 120px;
+        border: 1px solid #e2e8f0;
+    }
+    .preview-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .btn-remove {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background: rgba(220, 38, 38, 0.9);
+        color: white;
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        font-size: 14px;
+        line-height: 1;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-remove:hover {
+        background: #dc2626;
+        transform: scale(1.1);
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-box-seam me-2"></i>Add New Product</h4>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <?php if ($success): ?>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i><?= $success ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php if ($error): ?>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i><?= $error ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+
+                    <form method="POST" enctype="multipart/form-data" id="productForm">
+                        <div class="row g-4">
+                            
+                            <div class="col-lg-8">
+                                <div class="card bg-light border-0 h-100">
+                                    <div class="card-body p-4">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Product Name <span class="text-danger">*</span></label>
+                                            <input type="text" name="name" class="form-control form-control-lg" 
+                                                   value="<?= htmlspecialchars($name ?? '') ?>" placeholder="Enter product name" required>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold">Price (৳) <span class="text-danger">*</span></label>
+                                                <input type="number" step="0.01" name="price" class="form-control" 
+                                                       value="<?= htmlspecialchars($price ?? '') ?>" placeholder="0.00" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold">Category</label>
+                                                <select name="category_id" class="form-select">
+                                                    <option value="">-- Select Category --</option>
+                                                    <?php foreach($cats as $c): ?>
+                                                        <option value="<?= $c['id'] ?>" <?= (isset($cat_id) && $cat_id == $c['id']) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($c['name']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Description</label>
+                                            <textarea name="description" rows="6" class="form-control" placeholder="Product details..."><?= htmlspecialchars($desc ?? '') ?></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4">
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Main Image <span class="text-danger">*</span></label>
+                                    <div class="upload-area p-4 text-center" onclick="document.getElementById('mainImage').click()">
+                                        <input type="file" name="main_image" id="mainImage" accept="image/*" hidden required onchange="previewMain(this)">
+                                        <div id="mainPreviewBox">
+                                            <i class="bi bi-cloud-arrow-up display-4 text-muted"></i>
+                                            <p class="small text-muted mt-2 mb-0">Click to upload cover image</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="form-label fw-bold">Gallery Images</label>
+                                    <div class="upload-area p-3 text-center mb-3" onclick="document.getElementById('galleryImages').click()">
+                                        <input type="file" name="images[]" id="galleryImages" multiple accept="image/*" hidden>
+                                        <i class="bi bi-images fs-3 text-muted"></i>
+                                        <p class="small text-muted mb-0">Add multiple images</p>
+                                    </div>
+                                    <div class="row g-2" id="galleryPreview"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 mt-4 text-end">
+                                <hr>
+                                <button type="submit" class="btn btn-primary btn-lg px-5">
+                                    <i class="bi bi-check-lg"></i> Save Product
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="mb-3">
-        <label>Description</label>
-        <textarea name="description" class="form-control" rows="5"></textarea>
-    </div>
-    <div class="mb-3">
-        <label>Price (৳)</label>
-        <input type="number" name="price" class="form-control" step="0.01" required>
-    </div>
-    <div class="mb-3">
-        <label>Category</label>
-        <select name="category_id" class="form-select">
-            <option value="">None</option>
-            <?php foreach($cats as $c): ?>
-            <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-    <div class="mb-3">
-        <label>Main Image</label>
-        <input type="file" name="main_image" class="form-control" accept="image/*" required>
-    </div>
-    <div class="mb-3">
-        <label>Additional Images</label>
-        <input type="file" name="images[]" class="form-control" multiple accept="image/*">
-    </div>
-    <button type="submit" class="btn btn-accent">Add Product</button>
-</form>
+</div>
+
+<script>
+// ১. মেইন ইমেজ প্রিভিউ ফাংশন
+function previewMain(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('mainPreviewBox').innerHTML = `
+                <img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">
+            `;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// ২. গ্যালারি ইমেজ হ্যান্ডলিং (Add + Remove System)
+const galleryInput = document.getElementById('galleryImages');
+const galleryContainer = document.getElementById('galleryPreview');
+// DataTransfer অবজেক্ট ব্যবহার করে ফাইলের লিস্ট ম্যানেজ করা হবে
+let galleryFiles = new DataTransfer();
+
+galleryInput.addEventListener('change', function(e) {
+    const newFiles = e.target.files;
+
+    // নতুন সিলেক্ট করা ফাইলগুলো আমাদের কাস্টম লিস্টে যোগ করি
+    for (let i = 0; i < newFiles.length; i++) {
+        // ডুপ্লিকেট চেক (ঐচ্ছিক, চাইলে বাদ দিতে পারেন)
+        let isDuplicate = false;
+        for(let j=0; j<galleryFiles.files.length; j++){
+             if(galleryFiles.files[j].name === newFiles[i].name){
+                 isDuplicate = true;
+                 break;
+             }
+        }
+        if(!isDuplicate){
+            galleryFiles.items.add(newFiles[i]);
+        }
+    }
+
+    // ইনপুটের ফাইল লিস্ট আপডেট করা (গুরুত্বপূর্ণ)
+    galleryInput.files = galleryFiles.files;
+
+    // প্রিভিউ রেন্ডার করা
+    renderGallery();
+});
+
+function renderGallery() {
+    galleryContainer.innerHTML = ''; // আগের প্রিভিউ ক্লিয়ার
+
+    Array.from(galleryFiles.files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const col = document.createElement('div');
+            col.className = 'col-4'; // এক সারিতে ৩টা ছবি
+            col.innerHTML = `
+                <div class="preview-card">
+                    <img src="${e.target.result}">
+                    <button type="button" class="btn-remove" onclick="removeImage(${index})">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            `;
+            galleryContainer.appendChild(col);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// ছবি ডিলিট করার ফাংশন
+window.removeImage = function(index) {
+    // নতুন DataTransfer তৈরি করে ডিলিট বাদে বাকিগুলো কপি করা
+    const dt = new DataTransfer();
+    const inputFiles = galleryFiles.files;
+
+    for (let i = 0; i < inputFiles.length; i++) {
+        if (i !== index) {
+            dt.items.add(inputFiles[i]); // ইনডেক্স না মিললে রাখা হবে
+        }
+    }
+
+    galleryFiles = dt; // গ্লোবাল লিস্ট আপডেট
+    galleryInput.files = galleryFiles.files; // ইনপুট ট্যাগ আপডেট (ডাটাবেসে সাবমিট হওয়ার জন্য)
+    
+    renderGallery(); // আবার প্রিভিউ দেখাও
+}
+</script>
 
 <?php include '../footer.php'; ?>
-</body>
-</html>

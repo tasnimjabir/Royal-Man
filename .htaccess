@@ -5,7 +5,8 @@ RewriteCond %{REQUEST_FILENAME} !-d
 
 RewriteRule ^$ index.php [L]
 RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L]
-RewriteRule ^product/([a-z0-9-]+)/?$ product.php?slug=$1 [L]
+RewriteRule ^product-view/([a-z0-9-]+)/?$ product-view.php?slug=$1 [L]
+RewriteRule ^products$ products.php [L]
 RewriteRule ^cart/?$ cart.php [L]
 RewriteRule ^checkout/?$ checkout.php [L]
 RewriteRule ^login/?$ login.php [L]

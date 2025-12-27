@@ -27,7 +27,7 @@
 <body>
 <header class="admin-header">
     <div class="container d-flex align-items-center justify-content-between">
-        <h4 class="mb-0 text-primary fw-bold">Royal Man <span class="text-secondary">Admin</span></h4>
+        <h4 class="mb-0 text-primary fw-bold"><a href="../" target="_blank" rel="noopener noreferrer">Royal Man</a><span class="text-secondary">-Admin</span></h4>
         <a href="logout.php" class="btn btn-outline-danger">Logout</a>
     </div>
 </header>
@@ -39,6 +39,8 @@
         <li class="nav-item"><a class="nav-link <?= $page == 'categories' ? 'active' : '' ?>" href="categories.php"><i class="bi bi-tags me-2"></i> Categories</a></li>
         <li class="nav-item"><a class="nav-link <?= $page == 'customers' ? 'active' : '' ?>" href="customers.php"><i class="bi bi-people me-2"></i> Customers</a></li>
         <li class="nav-item"><a class="nav-link <?= $page == 'settings' ? 'active' : '' ?>" href="settings.php"><i class="bi bi-gear me-2"></i> Settings</a></li>
+        <li class="nav-item"><a class="nav-link <?= $page == 'carousel' ? 'active' : '' ?>" href="carousel-edit.php"><i class="bi bi-sliders me-2"></i> Carousel</a></li>
+        <li class="nav-item"><a class="nav-link <?= $page == 'visitor-logs' ? 'active' : '' ?>" href="visitor-logs.php"><i class="bi bi-globe me-2"></i> Visitor Logs</a></li>
     </ul>
 </nav>
 
