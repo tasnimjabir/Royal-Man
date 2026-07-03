@@ -1,31 +1,74 @@
 Royal-Man/
-├── admin/
-│   ├── index.php          → Dashboard
-│   ├── login.php
+├── admin-123/
+│   ├── add-category.php
+│   ├── add-product.php
+│   ├── carousel-edit.php
 │   ├── categories.php
+│   ├── customers.php
+│   ├── delete-category.php
+│   ├── delete-customer.php
+│   ├── delete-product.php
+│   ├── download-log.php
+│   ├── edit-category.php
+│   ├── edit-product.php
+│   ├── index.php
+│   ├── login.php
+│   ├── logout.php
+│   ├── order-view.php
 │   ├── products.php
-│   ├── orders.php
-│   └── users.php
+│   ├── settings.php
+│   └── visitor-logs.php
 ├── assets/
-│   ├── css/custom.css
-│   └── js/custom.js
+│   ├── css/
+│   │   └── style.css
+│   └── js/
+│       └── script.js
+├── auth/
+│   └── PHPMailer-master/
+│       ├── COMMITMENT
+│       ├── composer.json
+│       ├── get_oauth_token.php
+│       ├── LICENSE
+│       ├── README.md
+│       ├── SECURITY.md
+│       ├── SMTPUTF8.md
+│       ├── VERSION
+│       ├── language/
+│       │   └── (multiple phpmailer.lang-*.php files)
+│       └── src/
 ├── includes/
-│   ├── header.php
-│   ├── footer.php
+│   ├── admin-header.php
 │   ├── db.php
 │   ├── functions.php
-│   └── auth.php
+│   └── visitor.php
 ├── uploads/
-│   ├── products/          → 755 permissions
-│   └── categories/
+│   ├── carousels/
+│   ├── categories/
+│   └── products/
+├── sql/
+│   ├── create.sql
+│   └── insert.sql
 ├── .htaccess
-├── config.php
-├── index.php              → Home
-├── category.php
-├── product.php
 ├── cart.php
+├── category.php
 ├── checkout.php
+├── config.php
+├── file-structure.txt
+├── footer.php
+├── header.php
+├── index.php
+├── ips.txt
+├── LICENSE
 ├── login.php
+├── logout.php
+├── order-details.php
+├── order-success.php
+├── orders.php
+├── product-view.php
+├── products.php
+├── README.md
 ├── register.php
+├── Royal-Man.code-workspace
 ├── search.php
-└── order-success.php
+├── verify-otp.php
+└── visitor-log.txt

@@ -14,15 +14,23 @@ $products = $stmt->fetchAll();
 
 <table class="table table-hover bg-white rounded shadow">
     <thead>
-        <tr><th>Image</th><th>Name</th><th>Price</th><th>Category</th><th>Actions</th></tr>
+        <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Category</th>
+            <th>Views</th>
+            <th>Actions</th>
+        </tr>
     </thead>
     <tbody>
         <?php foreach($products as $p): ?>
         <tr>
-            <td><img src="../uploads/products/<?= $p['main_image'] ?>" width="80" class="rounded"></td>
-            <td><?= $p['name'] ?></td>
+            <td><img src="../uploads/products/<?= htmlspecialchars($p['main_image']) ?>" width="80" class="rounded"></td>
+            <td><?= htmlspecialchars($p['name']) ?></td>
             <td>৳<?= number_format($p['price']) ?></td>
-            <td><?= $p['cat_name'] ?? 'None' ?></td>
+            <td><?= htmlspecialchars($p['cat_name'] ?? 'None') ?></td>
+            <td><?= (int)($p['views'] ?? 0) ?></td>
             <td>
                 <a href="edit-product.php?id=<?= $p['id'] ?>" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
                 <a href="delete-product.php?id=<?= $p['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete?')"><i class="bi bi-trash"></i> Delete</a>

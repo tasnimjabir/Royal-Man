@@ -29,23 +29,23 @@ $products = $pdo->query("
 <?php include 'header.php'; ?>
 
 <!-- Categories Grid Section (Sequential Grid) -->
-<section class="py-5 bg-white">
+<section class="py-3 bg-light">
     <div class="container">
-        <h2 class="text-center display-5 fw-bold mb-5 text-dark">Browse by Category</h2>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4">
+        <div class="text-center mb-3">
+            <h2 class="h5 fw-bold text-dark mb-2">Browse by Category</h2>
+            <p class="text-muted small">Shop by your favorite categories</p>
+        </div>
+        <div class="row row-cols-3 row-cols-md-4 row-cols-lg-6 g-2 justify-content-center">
             <?php foreach($categories as $cat): ?>
             <div class="col">
                 <a href="category.php?slug=<?= htmlspecialchars($cat['slug']) ?>" class="text-decoration-none">
-                    <div class="card h-100 border-0 shadow-sm rounded-3 text-center py-4 hover-shadow">
-                        <?php if ($cat['image']): ?>
+                    <div class="card h-100 border-0 shadow-sm rounded-2 text-center py-3 hover-shadow transition-all">
+                        <div class="card-body p-2">
                             <img src="uploads/categories/<?= htmlspecialchars($cat['image']) ?>" 
-                                 class="mx-auto mb-3" 
-                                 style="width: 80px; height: 80px; object-fit: contain;"
-                                 alt="<?= htmlspecialchars($cat['name']) ?>">
-                        <?php else: ?>
-                            <i class="bi bi-tags fs-1 text-gold mb-3"></i>
-                        <?php endif; ?>
-                        <h5 class="fw-bold text-dark"><?= htmlspecialchars($cat['name']) ?></h5>
+                                 alt="<?= htmlspecialchars($cat['name']) ?>" 
+                                 class="img-fluid mb-2 category-card-img">
+                            <h6 class="fw-bold text-dark"><?= htmlspecialchars($cat['name']) ?></h6>
+                        </div>
                     </div>
                 </a>
             </div>

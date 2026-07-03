@@ -39,7 +39,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
                     $mail->SMTPSecure = 'tls';
                     $mail->Port = 587;
 
-                    $mail->setFrom('shadmanshakibdip18@gmail.com', 'East West Hospital');
+                    $mail->setFrom('shadmanshakibdip18@gmail.com', 'Royal Man');
                     $mail->addAddress($email, $name);
 
                     $mail->isHTML(true);
@@ -77,7 +77,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
                 $mail->SMTPSecure = 'tls';
                 $mail->Port = 587;
 
-                $mail->setFrom('shadmanshakibdip18@gmail.com', 'East West Hospital');
+                $mail->setFrom('shadmanshakibdip18@gmail.com', 'Royal Man');
                 $mail->addAddress($email, $name);
 
                 $mail->isHTML(true);
@@ -108,7 +108,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body { background: #f8f9fa; font-family: 'Inter', sans-serif; }
-        .signup-card { max-width: 450px; margin: auto; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .signup-card { width: 410px; margin: auto; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         .signup-header { background: #d4af37; color: #000; padding: 40px 30px; text-center; }
         .signup-body { padding: 40px 30px; background: white; }
         .btn-gold { background: #d4af37; color: #000; border: none; font-weight: 600; }

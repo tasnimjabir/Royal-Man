@@ -41,6 +41,7 @@
         <li class="nav-item"><a class="nav-link <?= $page == 'settings' ? 'active' : '' ?>" href="settings.php"><i class="bi bi-gear me-2"></i> Settings</a></li>
         <li class="nav-item"><a class="nav-link <?= $page == 'carousel' ? 'active' : '' ?>" href="carousel-edit.php"><i class="bi bi-sliders me-2"></i> Carousel</a></li>
         <li class="nav-item"><a class="nav-link <?= $page == 'visitor-logs' ? 'active' : '' ?>" href="visitor-logs.php"><i class="bi bi-globe me-2"></i> Visitor Logs</a></li>
+        <li class="nav-item"><a class="nav-link <?= $page == 'faq' ? 'active' : '' ?>" href="faq.php"><i class="bi bi-question-circle me-2"></i> FAQ</a></li>
     </ul>
 </nav>
 

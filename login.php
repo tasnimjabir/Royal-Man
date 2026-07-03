@@ -4,7 +4,7 @@ require_once 'includes/db.php';
 
 // login.php - Login with Password & Nice UI
 
-if (isset($_SESSION['user_id'])) header("Location: /");
+if (isset($_SESSION['user_id'])) header("Location: index.php");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'];
@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($user && password_verify($password, $user['password'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_name'] = $user['name'];
-        header("Location: /");
+        header("Location: index.php");
         exit;
     } else {
         $error = "Invalid email, password, or unverified account";
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body { background: #f8f9fa; font-family: 'Inter', sans-serif; }
-        .login-card { max-width: 450px; margin: auto; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .login-card { width: 410px; margin: auto; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         .login-header { background: #d4af37; color: #000; padding: 40px 30px; text-center; }
         .login-body { padding: 40px 30px; background: white; }
         .btn-gold { background: #d4af37; color: #000; border: none; font-weight: 600; }
@@ -64,9 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
             <button type="submit" class="btn btn-gold w-100 py-3 rounded-pill mb-3">Login</button>
         </form>
-        <a href="google-login.php" class="btn btn-google w-100 py-3 rounded-pill">
+        <!-- <a href="google-login.php" class="btn btn-google w-100 py-3 rounded-pill">
             <img src="https://developers.google.com/identity/images/g-logo.png" class="me-2"> Continue with Google
-        </a>
+        </a> -->
         <p class="text-center mt-3 small text-muted">New here? <a href="register.php" class="text-gold fw-500">Sign Up</a></p>
     </div>
 </div>

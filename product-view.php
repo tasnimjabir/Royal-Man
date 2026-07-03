@@ -6,19 +6,31 @@ require_once 'includes/db.php';
 // Get product by slug
 $slug = $_GET['slug'] ?? '';
 if (!$slug) {
-    header("Location: /");
+    header("Location: index.php");
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT p.*, c.name AS category_name FROM products p 
+$stmt = $pdo->prepare("SELECT p.*, c.name AS category_name, c.slug AS category_slug FROM products p 
                        LEFT JOIN categories c ON p.category_id = c.id 
                        WHERE p.slug = ?");
 $stmt->execute([$slug]);
 $product = $stmt->fetch();
 
 if (!$product) {
-    header("Location: /");
+    header("Location: index.php");
     exit;
+}
+
+// Increment product views once per session (prevents counting reloads)
+if (!isset($_SESSION['viewed_products']) || !is_array($_SESSION['viewed_products'])) {
+    $_SESSION['viewed_products'] = [];
+}
+if (!in_array($product['id'], $_SESSION['viewed_products'])) {
+    $upd = $pdo->prepare("UPDATE products SET views = views + 1 WHERE id = ?");
+    $upd->execute([$product['id']]);
+    $_SESSION['viewed_products'][] = $product['id'];
+    // reflect the increment locally so the page shows updated value if used
+    $product['views'] = ($product['views'] ?? 0) + 1;
 }
 
 // Fetch additional images
@@ -113,25 +125,26 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="col-lg-6">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="/">Home</a></li>
+                        <li class="breadcrumb-item"><a href="index.php">Home</a></li>
                         <li class="breadcrumb-item"><a href="products.php">Products</a></li>
                         <li class="breadcrumb-item active"><?= htmlspecialchars($product['name']) ?></li>
                     </ol>
                 </nav>
 
-                <h1 class="display-5 fw-bold mb-3"><?= htmlspecialchars($product['name']) ?></h1>
+                <h1 class="fs-2 fw-bold mb-4"><?= htmlspecialchars($product['name']) ?></h1>
                 
                 <?php if ($product['category_name']): ?>
-                    <p class="text-muted mb-3">
-                        <a href="/category/<?= $product['category_slug'] ?? '#' ?>" class="text-decoration-none">
+                    <p class="text-muted mb-2">
+                        <a href="category/<?= $product['category_slug'] ?? '#' ?>" class="text-decoration-none">
                             <?= htmlspecialchars($product['category_name']) ?>
                         </a>
                     </p>
                 <?php endif; ?>
 
-                <div class="fs-1 fw-bold text-accent mb-4">৳<?= number_format($product['price'], 0) ?></div>
+                <div class="fs-1 fw-bold text-accent mb-3">৳<?= number_format($product['price'], 0) ?></div>
+                
 
-                <div class="mb-5 text-secondary lh-lg">
+                <div class="mb-3 text-secondary lh-lg">
                     <?= nl2br(htmlspecialchars($product['description'] ?: 'No description available.')) ?>
                 </div>
 
@@ -152,39 +165,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 <?php endif; ?>
 
                 <!-- Add to Cart -->
-<div class="card border-0 shadow-sm p-4 mt-5">
-    <form action="cart.php" method="POST" class="row g-3 align-items-end">
-        <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-        <?php if (!empty($sizes)): ?>
-        <input type="hidden" name="size_id" id="sizeInput" value="">
-        <?php endif; ?>
+                <form action="cart.php" method="POST" class="row g-3 align-items-end">
+                    <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
+                    <?php if (!empty($sizes)): ?>
+                    <input type="hidden" name="size_id" id="sizeInput" value="">
+                    <?php endif; ?>
 
-            <div class="col-auto">
-            <label class="form-label fw-bold mb-2">Quantity</label>
-            <div class="input-group input-group-lg input-w-160">
-                <button type="button" class="btn btn-outline-secondary rounded-start" onclick="changeQty(-1)">
-                    <i class="bi bi-dash"></i>
-                </button>
-                <input type="number" name="quantity" id="qtyInput" value="1" min="1" max="50" 
-                       class="form-control text-center fw-bold p-0 border" readonly>
-                <button type="button" class="btn btn-outline-secondary rounded-end" onclick="changeQty(1)">
-                    <i class="bi bi-plus"></i>
-                </button>
-            </div>
-        </div>
+                        <div class="col-auto">
+                        <label class="form-label fw-bold mb-2">Quantity</label>
+                        <div class="input-group input-group-lg input-w-160">
+                            <button type="button" class="btn btn-outline-secondary rounded-start" onclick="changeQty(-1)">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" name="quantity" id="qtyInput" value="1" min="1" max="50" 
+                                class="form-control text-center fw-bold p-0 border" readonly>
+                            <button type="button" class="btn btn-outline-secondary rounded-end" onclick="changeQty(1)">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    </div>
 
-            <div class="col-auto d-flex align-items-end">
-            <button type="submit" class="btn btn-accent btn-lg px-5 py-3 shadow-lg hover-lift">
-                <i class="bi bi-bag-plus me-2"></i> Add to Cart
-            </button>
-        </div>
-    </form>
+                        <div class="col-auto d-flex align-items-end">
+                        <button type="submit" class="btn btn-accent btn-md px-5 py-3 shadow-lg hover-lift">
+                            <i class="bi bi-bag-plus me-2"></i> Add to Cart
+                        </button>
+                    </div>
+                        <button type="submit" formaction="buy-now.php" class="btn btn-accent btn-md px-4 py-3 mb-3 shadow-lg hover-lift">
+                            <i class="bi bi-bolt-fill me-2"></i> Buy Now
+                        </button>
+                </form>
+                
+                <!-- Stock Info (Optional) -->
+                <div class="mb-3 text-success small">
+                    <i class="bi bi-check2-circle"></i> In Stock • Ready to Ship
+                </div>
 
-    <!-- Stock Info (Optional) -->
-    <div class="mt-3 text-success small">
-        <i class="bi bi-check2-circle"></i> In Stock • Ready to Ship
-    </div>
-</div>
+                
             </div>
         </div>
     </div>
@@ -247,41 +263,27 @@ document.addEventListener('DOMContentLoaded', function() {
 <section class="py-5 bg-light mt-5">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="display-6 fw-bold mb-3">Recommended Products</h2>
-            <p class="text-muted lead">You might also like these items</p>
+            <h2 class="display-5 fw-bold text-dark">Related Products</h2>
+            <p class="text-muted fs-5">You might also like these items</p>
         </div>
-        <div class="row g-4">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
             <?php foreach ($similar_products as $rec_product): ?>
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100 transition-all hover-card">
-                    <!-- Product Image -->
-                    <div class="position-relative overflow-hidden" style="height: 280px;">
-                        <img src="uploads/products/<?= htmlspecialchars($rec_product['main_image']) ?>" 
-                             class="card-img-top img-fluid w-100 h-100 object-fit-cover" 
-                             alt="<?= htmlspecialchars($rec_product['name']) ?>"
-                             style="object-fit: cover;">
-                        <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-0 transition-all" style="transition: opacity 0.3s ease;">
+            <div class="col">
+                <div class="card h-100 border-0 overflow-hidden">
+                    <a href="product-view.php?slug=<?= htmlspecialchars($rec_product['slug']) ?>" class="text-decoration-none">
+                        <div class="position-relative overflow-hidden">
+                            <img src="uploads/products/<?= htmlspecialchars($rec_product['main_image']) ?>" 
+                                 class="card-img-top product-img product-card-img" 
+                                 alt="<?= htmlspecialchars($rec_product['name']) ?>" 
+                                 style="object-fit: cover;">
                         </div>
-                    </div>
-                    
-                    <!-- Product Info -->
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title fw-bold mb-2">
-                            <a href="/product-view?slug=<?= htmlspecialchars($rec_product['slug']) ?>" 
-                               class="text-decoration-none text-dark hover-accent">
+                        <div class="card-body text-center p-4">
+                            <h6 class="card-title fw-bold text-dark mb-2">
                                 <?= htmlspecialchars(strlen($rec_product['name']) > 40 ? substr($rec_product['name'], 0, 40) . '...' : $rec_product['name']) ?>
-                            </a>
-                        </h5>
-                        <div class="fs-5 fw-bold text-accent mb-3">
-                            ৳<?= number_format($rec_product['price'], 0) ?>
+                            </h6>
+                            <p class="fs-5 text-accent">৳<?= number_format($rec_product['price'], 0) ?></p>
                         </div>
-                        <div class="mt-auto">
-                            <a href="/product-view?slug=<?= htmlspecialchars($rec_product['slug']) ?>" 
-                               class="btn btn-outline-dark w-100 py-2 rounded-2">
-                                <i class="bi bi-eye me-2"></i> View Details
-                            </a>
-                        </div>
-                    </div>
+                    </a>
                 </div>
             </div>
             <?php endforeach; ?>

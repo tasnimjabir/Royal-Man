@@ -3,6 +3,6 @@ session_start();
 
 // logout.php - Simple Logout
 session_destroy();
-header("Location: /");
+header("Location: index.php");
 exit;
 ?>

@@ -35,7 +35,7 @@ if ($q !== '') {
         <div class="text-center py-5">
             <i class="bi bi-search fs-1 text-muted"></i>
             <p class="fs-4 mt-3 text-muted">No products found for "<?= htmlspecialchars($q) ?>"</p>
-            <a href="/" class="btn btn-outline-dark">Back to Home</a>
+            <a href="index.php" class="btn btn-outline-dark">Back to Home</a>
         </div>
     <?php else: ?>
         <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">

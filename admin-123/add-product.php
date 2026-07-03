@@ -1,6 +1,6 @@
 <?php
 session_start();
-// ১. লগিন চেক (আপনার পাথ অনুযায়ী ঠিক আছে কিনা দেখে নেবেন)
+// 1. Login check
 if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
     exit();
@@ -8,38 +8,38 @@ if (!isset($_SESSION['admin_id'])) {
 
 require '../includes/db.php';
 
-// ক্যাটাগরি নিয়ে আসা
+// Fetch categories
 $cats = $pdo->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 
 $error = '';
 $success = '';
 
-// ফর্ম সাবমিট হলে
+// When form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = trim($_POST['name']);
     $slug = preg_replace('/[^a-z0-9-]/', '-', strtolower($name));
-    // ডুপ্লিকেট হাইফেন রিমুভ করা
+    // Remove duplicate hyphens
     $slug = preg_replace('/-+/', '-', $slug); 
     
     $desc = $_POST['description'];
     $price = $_POST['price'];
     $cat_id = !empty($_POST['category_id']) ? $_POST['category_id'] : null;
 
-    // ভ্যালিডেশন
+    // Validation
     if (empty($name) || empty($price)) {
         $error = "Product name and price are required.";
     }
 
-    // মেইন ইমেজ হ্যান্ডলিং
+    // Main image handling
     $main_image = '';
     if (!$error && !empty($_FILES['main_image']['name'])) {
         $file = $_FILES['main_image'];
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $allowed = ['jpg', 'jpeg', 'png', 'webp'];
         
-        if (in_array($ext, $allowed) && $file['size'] < 5000000) { // ৫MB
+        if (in_array($ext, $allowed) && $file['size'] < 5000000) { // 5MB
             $main_image = time() . '_main.' . $ext;
-            // ফোল্ডার না থাকলে তৈরি করে নেবে
+            // Create folder if it doesn't exist
             if (!is_dir('../uploads/products/')) mkdir('../uploads/products/', 0777, true);
             
             move_uploaded_file($file['tmp_name'], '../uploads/products/' . $main_image);
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error = "Main image is required.";
     }
 
-    // ডাটাবেসে ইনসার্ট
+    // Insert into database
     if (!$error) {
         try {
             $pdo->beginTransaction();
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->execute([$name, $slug, $desc, $price, $cat_id, $main_image]);
             $product_id = $pdo->lastInsertId();
 
-            // গ্যালারি ইমেজ হ্যান্ডলিং (লুপ)
+            // Gallery image handling (loop)
             if (!empty($_FILES['images']['name'][0])) {
                 $files = $_FILES['images'];
                 $count = count($files['name']);
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $pdo->commit();
             $success = "Product added successfully!";
             
-            // ফর্ম ক্লিয়ার করার জন্য ভেরিয়েবল রিসেট
+            // Reset variables to clear the form
             $name = $desc = $price = $cat_id = '';
             
         } catch (Exception $e) {
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <?php include '../includes/admin-header.php'; ?>
 
 <style>
-    /* কাস্টম স্টাইল UI সুন্দর করার জন্য */
+    /* Custom styles for better UI */
     .upload-area {
         border: 2px dashed #cbd5e1;
         border-radius: 10px;
@@ -243,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </div>
 
 <script>
-// ১. মেইন ইমেজ প্রিভিউ ফাংশন
+// 1. Main image preview function
 function previewMain(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -256,18 +256,18 @@ function previewMain(input) {
     }
 }
 
-// ২. গ্যালারি ইমেজ হ্যান্ডলিং (Add + Remove System)
+// 2. Gallery image handling (Add + Remove System)
 const galleryInput = document.getElementById('galleryImages');
 const galleryContainer = document.getElementById('galleryPreview');
-// DataTransfer অবজেক্ট ব্যবহার করে ফাইলের লিস্ট ম্যানেজ করা হবে
+// Use DataTransfer object to manage file list
 let galleryFiles = new DataTransfer();
 
 galleryInput.addEventListener('change', function(e) {
     const newFiles = e.target.files;
 
-    // নতুন সিলেক্ট করা ফাইলগুলো আমাদের কাস্টম লিস্টে যোগ করি
+    // Add newly selected files to our custom list
     for (let i = 0; i < newFiles.length; i++) {
-        // ডুপ্লিকেট চেক (ঐচ্ছিক, চাইলে বাদ দিতে পারেন)
+        // Duplicate check (optional)
         let isDuplicate = false;
         for(let j=0; j<galleryFiles.files.length; j++){
              if(galleryFiles.files[j].name === newFiles[i].name){
@@ -280,21 +280,21 @@ galleryInput.addEventListener('change', function(e) {
         }
     }
 
-    // ইনপুটের ফাইল লিস্ট আপডেট করা (গুরুত্বপূর্ণ)
+    // Update input file list (important for database submission)
     galleryInput.files = galleryFiles.files;
 
-    // প্রিভিউ রেন্ডার করা
+    // Render preview
     renderGallery();
 });
 
 function renderGallery() {
-    galleryContainer.innerHTML = ''; // আগের প্রিভিউ ক্লিয়ার
+    galleryContainer.innerHTML = ''; // Clear previous preview
 
     Array.from(galleryFiles.files).forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = function(e) {
             const col = document.createElement('div');
-            col.className = 'col-4'; // এক সারিতে ৩টা ছবি
+            col.className = 'col-4'; // 3 images per row
             col.innerHTML = `
                 <div class="preview-card">
                     <img src="${e.target.result}">
@@ -309,22 +309,22 @@ function renderGallery() {
     });
 }
 
-// ছবি ডিলিট করার ফাংশন
+// Function to delete image
 window.removeImage = function(index) {
-    // নতুন DataTransfer তৈরি করে ডিলিট বাদে বাকিগুলো কপি করা
+    // Create new DataTransfer and copy all except the deleted one
     const dt = new DataTransfer();
     const inputFiles = galleryFiles.files;
 
     for (let i = 0; i < inputFiles.length; i++) {
         if (i !== index) {
-            dt.items.add(inputFiles[i]); // ইনডেক্স না মিললে রাখা হবে
+            dt.items.add(inputFiles[i]); // Keep if index doesn't match
         }
     }
 
-    galleryFiles = dt; // গ্লোবাল লিস্ট আপডেট
-    galleryInput.files = galleryFiles.files; // ইনপুট ট্যাগ আপডেট (ডাটাবেসে সাবমিট হওয়ার জন্য)
+    galleryFiles = dt; // Update global list
+    galleryInput.files = galleryFiles.files; // Update input tag (for database submission)
     
-    renderGallery(); // আবার প্রিভিউ দেখাও
+    renderGallery(); // Render preview again
 }
 </script>
 

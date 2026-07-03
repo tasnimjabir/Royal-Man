@@ -81,6 +81,11 @@ $order = $stmt->fetch();
                 </form>
             </p>
             <p><strong>Date:</strong> <?= date('d M Y, h:i A', strtotime($order['created_at'])) ?></p>
+            <?php 
+                $subtotal = $order['total'] - ($order['shipping_charge'] ?? 0);
+            ?>
+            <p><strong>Subtotal:</strong> <span class="fw-bold">৳<?= number_format($subtotal, 0) ?></span></p>
+            <p><strong>Shipping Charge:</strong> <span class="fw-bold">৳<?= number_format($order['shipping_charge'] ?? 0, 0) ?></span></p>
             <p><strong>Total:</strong> <span class="fs-5 text-accent fw-bold">৳<?= number_format($order['total'], 0) ?></span></p>
             
             <hr>

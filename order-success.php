@@ -5,7 +5,7 @@ require_once 'includes/db.php';
 $order_id = $_GET['order_id'] ?? 0;
 
 if (!$order_id) {
-    header("Location: /");
+    header("Location: index.php");
     exit;
 }
 
@@ -15,7 +15,7 @@ $stmt->execute([$order_id]);
 $order = $stmt->fetch();
 
 if (!$order) {
-    header("Location: /");
+    header("Location: index.php");
     exit;
 }
 
@@ -34,7 +34,6 @@ if (isset($_SESSION['user_id'])) {
         <i class="bi bi-check-circle-fill display-1 text-success mb-4"></i>
         <h1 class="display-4 fw-bold text-dark">Thank You for Your Order!</h1>
         <p class="lead text-muted mb-4">Order #<?= $order_id ?> has been placed successfully.</p>
-        <p class="fs-5">We'll send a confirmation email to <?= htmlspecialchars($order['customer_email']) ?> soon.</p>
     </div>
 </section>
 
@@ -65,7 +64,7 @@ if (isset($_SESSION['user_id'])) {
                     <p class="text-muted">Email: <?= htmlspecialchars($order['customer_email']) ?></p>
 
                     <div class="mt-5 text-center">
-                        <a href="/" class="btn btn-outline-dark px-5 py-3 rounded-pill">
+                        <a href="index.php" class="btn btn-outline-dark px-5 py-3 rounded-pill">
                             <i class="bi bi-shop me-2"></i> Continue Shopping
                         </a>
                         <?php if (isset($_SESSION['user_id'])): ?>

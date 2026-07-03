@@ -11,7 +11,7 @@ $stmt->execute([$slug]);
 $category = $stmt->fetch();
 
 if (!$category) {
-    header("Location: /");
+    header("Location: index.php");
     exit;
 }
 

@@ -16,6 +16,22 @@ foreach ($_SESSION['cart'] as $item) {
     $total += $item['price'] * $item['quantity'];
 }
 
+// Load metadata values (shipping prices)
+$meta = [];
+try {
+    $stmt = $pdo->query("SELECT name, value FROM metadata");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $meta[$row['name']] = $row['value'];
+    }
+} catch (Exception $e) {
+    // metadata table may not exist yet; default to zeros
+}
+
+// selected shipping default
+$selected_shipping = 'in_dhaka';
+$shipping_charge = isset($meta[$selected_shipping]) ? floatval($meta[$selected_shipping]) : 0;
+$grand_total = $total + $shipping_charge;
+
 // Handle Order Placement
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = trim($_POST['name']);
@@ -23,6 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $phone = trim($_POST['phone']);
     $address = trim($_POST['address']);
     $notes = trim($_POST['notes']);
+        $selected_shipping = $_POST['shipping_type'] ?? 'in_dhaka';
+        $shipping_charge = isset($meta[$selected_shipping]) ? floatval($meta[$selected_shipping]) : 0;
+        $grand_total = $total + $shipping_charge;
     $error = null;
 
     if (empty($name) || empty($email) || empty($phone) || empty($address)) {
@@ -31,10 +50,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user_id = $_SESSION['user_id'] ?? null;
         $session_id = session_id();
 
-        // Insert Order
-        $stmt = $pdo->prepare("INSERT INTO orders (user_id, session_id, total, status, customer_name, customer_email, phone, shipping_address, notes) 
-                               VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?)");
-        $stmt->execute([$user_id, $session_id, $total, $name, $email, $phone, $address, $notes]);
+        // Insert Order (include shipping_charge)
+        $stmt = $pdo->prepare("INSERT INTO orders (user_id, session_id, total, shipping_charge, status, customer_name, customer_email, phone, shipping_address, notes) 
+                       VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $session_id, $grand_total, $shipping_charge, $name, $email, $phone, $address, $notes]);
         $order_id = $pdo->lastInsertId();
 
         // Insert Order Items
@@ -62,6 +81,9 @@ if (isset($_SESSION['user_id'])) {
     $name = $user['name'] ?? '';
     $email = $user['email'] ?? '';
 }
+
+// Pass shipping metadata to JavaScript
+$shipping_data = json_encode($meta);
 ?>
 
 <?php include 'header.php'; ?>
@@ -97,10 +119,21 @@ if (isset($_SESSION['user_id'])) {
                         <?php endforeach; ?>
                         <hr>
                         <div class="d-flex justify-content-between mb-3">
-                            <span class="fs-5 fw-bold">Total</span>
-                            <span class="fs-5 fw-bold text-accent">৳<?= number_format($total, 0) ?></span>
+                            <span class="fs-5 fw-bold">Subtotal</span>
+                            <span class="fs-5 fw-bold" id="subtotal">৳<?= number_format($total, 0) ?></span>
                         </div>
-                        <p class="text-success small text-center"><i class="bi bi-truck"></i> Free Shipping</p>
+                        <?php if (isset($meta['in_dhaka']) || isset($meta['outside_dhaka'])): ?>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="small text-muted">Shipping</span>
+                            <span class="small" id="shipping-display">৳<?= number_format($shipping_charge, 0) ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="fs-5 fw-bold">Total</span>
+                            <span class="fs-5 fw-bold text-accent" id="grand-total">৳<?= number_format($grand_total, 0) ?></span>
+                        </div>
+                        <p class="text-success small text-center"><i class="bi bi-truck"></i> Fast Delivery</p>
                     </div>
                 </div>
             </div>
@@ -136,6 +169,19 @@ if (isset($_SESSION['user_id'])) {
                                 <textarea name="notes" class="form-control" rows="3"></textarea>
                             </div>
                             <div class="col-12">
+                                <label class="form-label fw-bold">Shipping Option</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="shipping_type" id="ship_dhaka" value="in_dhaka" <?= $selected_shipping === 'in_dhaka' ? 'checked' : '' ?> >
+                                        <label class="form-check-label" for="ship_dhaka">Dhaka (৳<?= number_format(isset($meta['in_dhaka']) ? floatval($meta['in_dhaka']) : 0, 0) ?>)</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="shipping_type" id="ship_outside" value="outside_dhaka" <?= $selected_shipping === 'outside_dhaka' ? 'checked' : '' ?> >
+                                        <label class="form-check-label" for="ship_outside">Outside Dhaka (৳<?= number_format(isset($meta['outside_dhaka']) ? floatval($meta['outside_dhaka']) : 0, 0) ?>)</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
                                 <button type="submit" class="btn btn-accent w-100 py-3 rounded-pill fw-bold fs-5 shadow-lg">
                                     <i class="bi bi-credit-card me-2"></i> Place Order
                                 </button>
@@ -153,6 +199,28 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </div>
 </section>
+
+<script>
+// Real-time price update for shipping
+const shippingData = <?= $shipping_data ?>;
+const subtotal = <?= $total ?>;
+
+function updateTotal() {
+    const selectedShipping = document.querySelector('input[name="shipping_type"]:checked')?.value || 'in_dhaka';
+    const shippingCharge = parseFloat(shippingData[selectedShipping] || 0);
+    const grandTotal = subtotal + shippingCharge;
+    
+    // Format number with Bangla thousands separator
+    const formatter = new Intl.NumberFormat('en-BD', {maximumFractionDigits: 0});
+    document.getElementById('shipping-display').textContent = '৳' + formatter.format(shippingCharge);
+    document.getElementById('grand-total').textContent = '৳' + formatter.format(grandTotal);
+}
+
+// Update on radio button change
+document.querySelectorAll('input[name="shipping_type"]').forEach(radio => {
+    radio.addEventListener('change', updateTotal);
+});
+</script>
 
 <!-- moved per-page gold styles to assets/css/style.css; kept form control and shadow rules in central CSS if needed -->
 

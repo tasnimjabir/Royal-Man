@@ -79,6 +79,11 @@ $total = 0;
 foreach ($_SESSION['cart'] as $item) {
     $total += $item['price'] * $item['quantity'];
 }
+
+// Fetch FAQ for cart page
+$faqStmt = $pdo->prepare("SELECT id, ques, ans FROM faq WHERE page = 'cart' AND active = 1 ORDER BY sort_order ASC");
+$faqStmt->execute();
+$faqs = $faqStmt->fetchAll();
 ?>
 <?php include 'header.php'; ?>
 
@@ -99,7 +104,7 @@ foreach ($_SESSION['cart'] as $item) {
                 <i class="bi bi-cart-x display-1 text-muted mb-4"></i>
                 <h3 class="fw-bold mb-3">Your cart is empty</h3>
                 <p class="text-muted mb-4">Start adding some premium items!</p>
-                <a href="/products" class="btn btn-accent btn-lg px-5 py-3 rounded-pill shadow-lg">
+                <a href="products" class="btn btn-accent btn-lg px-5 py-3 rounded-pill shadow-lg">
                     <i class="bi bi-shop me-2"></i> Shop Now
                 </a>
             </div>
@@ -159,17 +164,8 @@ foreach ($_SESSION['cart'] as $item) {
                 <div class="col-lg-4">
                     <div class="bg-light p-4 rounded shadow-sm">
                         <h4 class="fw-bold mb-4">Cart Summary</h4>
-                        <div class="d-flex justify-content-between mb-3">
-                            <span class="text-muted">Subtotal</span>
-                            <span class="fw-bold">৳<?= number_format($total, 0) ?></span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-3">
-                            <span class="text-muted">Shipping</span>
-                            <span class="fw-bold text-success">Free</span>
-                        </div>
-                        <hr>
                             <div class="d-flex justify-content-between mb-4">
-                            <span class="fs-5 fw-bold">Grand Total</span>
+                            <span class="fs-5 fw-bold">Total</span>
                             <span class="fs-5 fw-bold text-accent">৳<?= number_format($total, 0) ?></span>
                         </div>
                         <a href="checkout.php" class="btn btn-accent w-100 py-3 rounded-pill fw-bold">
@@ -179,6 +175,82 @@ foreach ($_SESSION['cart'] as $item) {
                 </div>
             </div>
         <?php endif; ?>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<?php if (!empty($faqs)): ?>
+<section class="py-5 bg-gradient-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold text-dark mb-2">Frequently Asked Questions</h2>
+            <p class="lead text-muted">Find answers to common questions about shipping, returns, and more</p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion accordion-flush" id="faqAccordion">
+                    <?php foreach ($faqs as $index => $faq): ?>
+                    <div class="accordion-item border rounded mb-3 shadow-sm overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold text-dark py-3" 
+                                    type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#faq<?= $faq['id'] ?>" 
+                                    aria-expanded="false">
+                                <i class="bi bi-question-circle me-2 text-primary fs-5"></i>
+                                <?= htmlspecialchars($faq['ques']) ?>
+                            </button>
+                        </h2>
+                        <div id="faq<?= $faq['id'] ?>" 
+                             class="accordion-collapse collapse" 
+                             data-bs-parent="#faqAccordion">
+                            <div class="accordion-body bg-light text-muted py-4">
+                                <i class="bi bi-info-circle text-info me-2"></i>
+                                <?= htmlspecialchars($faq['ans']) ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<style>
+    .bg-gradient-light {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    .accordion-item {
+        border: 1px solid #e0e0e0 !important;
+        transition: all 0.3s ease;
+    }
+    
+    .accordion-item:hover {
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important;
+        transform: translateY(-2px);
+    }
+    
+    .accordion-button:not(.collapsed) {
+        background-color: #f8f9fa;
+        color: #0056b3;
+        box-shadow: none;
+    }
+    
+    .accordion-button:focus {
+        border-color: #0056b3;
+        box-shadow: 0 0 0 0.25rem rgba(0, 86, 179, 0.25);
+    }
+    
+    .accordion-body {
+        line-height: 1.8;
+        font-size: 0.975rem;
+    }
+</style>
+
+        
     </div>
 </section>
 

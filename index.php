@@ -1,4 +1,14 @@
 <?php 
+// Royal Man - Ecommerce Website
+// Code: Tasnim Jabir
+// Business: Monsurul Hoque Akib
+
+// index.php
+//  - Visitor Logging with IP Geolocation
+//  - Carousel Slider
+//  - Featured Products Section
+
+// Database
 session_start();
 include 'header.php'; 
 $featured = $pdo->query("SELECT name, slug, main_image FROM products ORDER BY created_at DESC LIMIT 4")->fetchAll();
@@ -11,10 +21,9 @@ $products = $pdo->query("
     ORDER BY p.created_at DESC
 ")->fetchAll();
 ?>
-<?php
-// Put this at the very top of your index.php (before any HTML output)
 
-// 1. Get visitor's real IP (works behind Cloudflare, proxies, etc.)
+<?php
+// Visitor Logging with IP Geolocation
 function getVisitorIP() {
     $keys = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR'];
     foreach ($keys as $key) {
@@ -34,9 +43,9 @@ $ip = getVisitorIP();
 // 2. Get location from IP using free API (ip-api.com - no key needed, 45 req/min limit)
 function getLocationFromIP($ip) {
     // Skip private & local IPs
-    if (in_array($ip, ['127.0.0.1', '::1']) || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_PRIVATE)) {
-        return "Local/Private IP";
-    }
+    // if (in_array($ip, ['127.0.0.1', '::1']) || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_PRIVATE)) {
+    //     return "Local/Private IP";
+    // }
 
     $url = "http://ip-api.com/json/{$ip}?fields=country,city,regionName,isp,timezone";
     $data = @file_get_contents($url);
@@ -62,7 +71,9 @@ $logLine   = "[$date] IP: $ip | Location: $location | Page: $page | Agent: $user
 $file = __DIR__ . '/visitor-log.txt';   // Saves in same folder as index.php
 file_put_contents($file, $logLine, FILE_APPEND | LOCK_EX);
 ?>
-<!-- HERO SECTION -->
+
+
+<!-- HERO SECTION:      Now hidden -->
 <?php if(false):?>
 <section class="hero-section">
     <div class="container">
@@ -94,17 +105,35 @@ file_put_contents($file, $logLine, FILE_APPEND | LOCK_EX);
 <?php 
 require_once 'includes/db.php'; 
 
-// index.php - Updated with Carousel Slider
-
-// Fetch active carousel items
+// Carousel Fetch
 $carousels = $pdo->query("SELECT * FROM carousels WHERE active = 1 ORDER BY sort_order ASC, id ASC")->fetchAll();
+
+// Fetch Trend Section Images from metadata
+$trendsection1_img = 'uploads/carousels/1765302288.jpg'; // Default fallback
+$trendsection2_img = 'uploads/carousels/1766685281.jpg'; // Default fallback
+try {
+    $stmt = $pdo->prepare("SELECT value FROM metadata WHERE name = ?");
+    $stmt->execute(['trendsection1']);
+    $img1 = $stmt->fetchColumn();
+    if ($img1) {
+        $trendsection1_img = 'uploads/trends/' . htmlspecialchars($img1);
+    }
+    
+    $stmt->execute(['trendsection2']);
+    $img2 = $stmt->fetchColumn();
+    if ($img2) {
+        $trendsection2_img = 'uploads/trends/' . htmlspecialchars($img2);
+    }
+} catch (Exception $e) {
+    // metadata table may not exist yet, use defaults
+}
 ?>
 
 
 <style>
     /* Default (Desktop) Styles */
     .hero-slide {
-        height: 90vh;
+        height: 80vh;
         background-position: center;
         background-size: cover;
         position: relative;
@@ -119,11 +148,10 @@ $carousels = $pdo->query("SELECT * FROM carousels WHERE active = 1 ORDER BY sort
         font-size: 1.75rem;
         margin-bottom: 1.5rem;
     }
-
     /* Mobile Styles (Screen width less than 768px) */
-    @media (max-width: 768px) {
+    @media (max-width: 1200px) {
         .hero-slide {
-            height: 60vh; /* Smaller height for mobile */
+            height: 45vh; /* Smaller height for mobile */
         }
         
         .hero-title {
@@ -133,6 +161,11 @@ $carousels = $pdo->query("SELECT * FROM carousels WHERE active = 1 ORDER BY sort
         .hero-subtitle {
             font-size: 1.1rem;
         }
+    }
+    @media (max-width: 768px) {
+        .hero-slide {
+            height: 40vh; /* Smaller height for mobile */
+        }
 
         /* Adjust button size for mobile */
         .btn-accent {
@@ -141,6 +174,55 @@ $carousels = $pdo->query("SELECT * FROM carousels WHERE active = 1 ORDER BY sort
             }
         .btn-accent: hover {
             background-color: #c19a2e;
+        }
+    }
+
+    /* Mobile Styles (Screen width less than 768px) */
+    @media (max-width: 600px) {
+        .hero-slide {
+            height: 26vh; /* Smaller height for mobile */
+        }
+        .hero-title {
+            font-size: 1rem; /* Significantly smaller text */
+        }
+        
+        .hero-subtitle {
+            font-size: 0.65rem;
+        }
+        .btn-accent {
+                padding: 0.5rem 1.5rem !important;
+                font-size: 0.8rem !important;
+        }
+    }
+
+    /* Animations for carousel texts: slide-up + fade-in when slide becomes active */
+    .hero-title, .hero-subtitle {
+        will-change: transform, opacity;
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Trigger animation only for the active carousel item */
+    .carousel-item.active .hero-title {
+        animation: slideUpFade 0.72s cubic-bezier(.2,.9,.2,1) forwards;
+        animation-delay: 0.18s;
+    }
+
+    .carousel-item.active .hero-subtitle {
+        animation: slideUpFade 0.72s cubic-bezier(.2,.9,.2,1) forwards;
+        animation-delay: 0.36s;
+    }
+
+    /* Slightly faster animations on small screens */
+    @media (max-width: 768px) {
+        .carousel-item.active .hero-title,
+        .carousel-item.active .hero-subtitle {
+            animation-duration: 0.56s;
         }
     }
 </style>
@@ -228,7 +310,7 @@ $carousels = $pdo->query("SELECT * FROM carousels WHERE active = 1 ORDER BY sort
     <div class="container py-4">
         <div class="row g-4 align-items-center">
             <div class="col-md-6">
-                <div class="d-flex align-items-center style-card bg-white rounded shadow-sm" style="background: url(uploads/carousels/1765302288.jpg) no-repeat center/cover; padding:100px 30px">
+                <div class="d-flex align-items-center style-card bg-white rounded shadow-sm" style="background: url(<?= $trendsection1_img ?>) no-repeat center/cover; padding:100px 30px">
                     <div class="style-text me-4">
                         <p class="text-muted mb-3">TOP COLLECTIONS</p>
                         <h3 class="fw-bold">Top Trending Style</h3>
@@ -239,7 +321,7 @@ $carousels = $pdo->query("SELECT * FROM carousels WHERE active = 1 ORDER BY sort
             </div>
 
             <div class="col-md-6">
-                <div class="d-flex align-items-center style-card bg-white rounded shadow-sm" style="background: url(uploads/carousels/1766685281.jpg) no-repeat center/cover; padding:100px 30px">
+                <div class="d-flex align-items-center style-card bg-white rounded shadow-sm" style="background: url(<?= $trendsection2_img ?>) no-repeat center/cover; padding:100px 30px">
                     <div class="style-text me-4">
                         <p class="text-muted mb-3">TOP COLLECTIONS</p>
                         <h3 class="fw-bold">Top Trending Style</h3>
@@ -260,6 +342,54 @@ $carousels = $pdo->query("SELECT * FROM carousels WHERE active = 1 ORDER BY sort
         .style-image { text-align: center !important; }
         .style-image img { max-width: 100%; height: auto; }
     }
+</style>
+
+<!-- INFO SECTION: Grid System -->
+<section class="info-section py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="info-card text-center p-4">
+                    <i class="bi bi-truck fs-1 text-accent mb-3"></i>
+                    <h5 class="fw-bold mb-2">Quick Shipping</h5>
+                    <p class="text-muted small">On orders over 500 Taka across Bangladesh</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="info-card text-center p-4">
+                    <i class="bi bi-arrow-counterclockwise fs-1 text-accent mb-3"></i>
+                    <h5 class="fw-bold mb-2">Easy Returns</h5>
+                    <p class="text-muted small">You can return items within 30 days of purchase</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="info-card text-center p-4">
+                    <i class="bi bi-shield-check fs-1 text-accent mb-3"></i>
+                    <h5 class="fw-bold mb-2">Secure Checkout</h5>
+                    <p class="text-muted small">Safe and encrypted payment processing</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="info-card text-center p-4">
+                    <i class="bi bi-headset fs-1 text-accent mb-3"></i>
+                    <h5 class="fw-bold mb-2">24/7 Support</h5>
+                    <p class="text-muted small">Dedicated customer service team ready to help</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .info-section { background: #ffffff; border-top: 1px solid #e2e8f0; }
+    .info-card {
+        border-radius: 10px;
+        background: #f8fafc;
+        transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
+        /* min-height: 210px; */
+    }
+    .text-accent { color: #e74c3c; }
 </style>
 
 <?php include 'footer.php'; ?>

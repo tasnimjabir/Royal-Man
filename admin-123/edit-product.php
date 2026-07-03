@@ -7,16 +7,16 @@ if (!isset($_SESSION['admin_id'])) {
 
 require '../includes/db.php';
 
-// ১. প্রোডাক্ট আইডি চেক করা
+// 1. Check product ID
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header("Location: products.php"); // প্রোডাক্ট লিস্ট পেজে রিডাইরেক্ট
+    header("Location: products.php"); // Redirect to product list page
     exit();
 }
 
 $id = $_GET['id'];
 $success = $error = '';
 
-// ২. বর্তমান প্রোডাক্টের তথ্য আনা
+// 2. Get current product information
 $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
 $stmt->execute([$id]);
 $product = $stmt->fetch();
@@ -25,29 +25,29 @@ if (!$product) {
     die("Product not found!");
 }
 
-// ৩. গ্যালারি থেকে পুরনো ছবি ডিলিট করার লজিক (GET Request)
+// 3. Logic to delete old images from gallery (GET Request)
 if (isset($_GET['delete_img'])) {
     $img_id = $_GET['delete_img'];
     
-    // ছবির নাম আনা ফোল্ডার থেকে ডিলিট করার জন্য
+    // Get image name to delete from folder
     $stmt_img = $pdo->prepare("SELECT image FROM product_images WHERE id = ? AND product_id = ?");
     $stmt_img->execute([$img_id, $id]);
     $img_data = $stmt_img->fetch();
 
     if ($img_data) {
         $path = '../uploads/products/' . $img_data['image'];
-        if (file_exists($path)) unlink($path); // ফাইল ডিলিট
+        if (file_exists($path)) unlink($path); // Delete file
         
-        // ডাটাবেস থেকে ডিলিট
+        // Delete from database
         $pdo->prepare("DELETE FROM product_images WHERE id = ?")->execute([$img_id]);
         
-        // রিফ্রেশ করা যাতে URL থেকে প্যারামিটার চলে যায়
+        // Refresh so parameter is removed from URL
         header("Location: edit-product.php?id=" . $id . "&msg=deleted");
         exit();
     }
 }
 
-// ৪. প্রোডাক্ট আপডেট লজিক (POST Request)
+// 4. Product update logic (POST Request)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = trim($_POST['name']);
     $slug = preg_replace('/[^a-z0-9-]/', '-', strtolower($name));
@@ -62,19 +62,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (!$error) {
         try {
-            // মেইন ইমেজ আপডেট (যদি নতুন সিলেক্ট করা হয়)
-            $main_image = $product['main_image']; // ডিফল্ট হিসেবে পুরনোটা থাকবে
+            // Update main image (if new image is selected)
+            $main_image = $product['main_image']; // Default will be old image
             
             if (!empty($_FILES['main_image']['name'])) {
                 $file = $_FILES['main_image'];
                 $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
                 
                 if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp']) && $file['size'] < 5000000) {
-                    // পুরনো ছবি ডিলিট করা
+                    // Delete old image
                     $old_path = '../uploads/products/' . $product['main_image'];
                     if (file_exists($old_path) && !empty($product['main_image'])) unlink($old_path);
 
-                    // নতুন ছবি আপলোড
+                    // Upload new image
                     $main_image = time() . '_main.' . $ext;
                     move_uploaded_file($file['tmp_name'], '../uploads/products/' . $main_image);
                 } else {
@@ -83,11 +83,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
 
             if (!$error) {
-                // ডাটাবেস আপডেট
+                // Database update
                 $sql = "UPDATE products SET name=?, slug=?, description=?, price=?, category_id=?, main_image=? WHERE id=?";
                 $pdo->prepare($sql)->execute([$name, $slug, $desc, $price, $cat_id, $main_image, $id]);
 
-                // নতুন গ্যালারি ইমেজ যোগ করা
+                // Add new gallery images
                 if (!empty($_FILES['images']['name'][0])) {
                     $files = $_FILES['images'];
                     $count = count($files['name']);
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
 
                 $success = "Product updated successfully!";
-                // রিফ্রেশ ডাটা
+                // Refresh data
                 $stmt->execute([$id]);
                 $product = $stmt->fetch();
             }
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// বর্তমান গ্যালারি ইমেজগুলো আনা
+// Get current gallery images
 $gallery_images = $pdo->prepare("SELECT * FROM product_images WHERE product_id = ?");
 $gallery_images->execute([$id]);
 $existing_images = $gallery_images->fetchAll();
@@ -126,7 +126,7 @@ $cats = $pdo->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 <?php include '../includes/admin-header.php'; ?>
 
 <style>
-    /* Add Product এর স্টাইল কপি করা হয়েছে */
+    /* Styles copied from Add Product */
     .upload-area {
         border: 2px dashed #cbd5e1;
         border-radius: 10px;

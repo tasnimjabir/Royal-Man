@@ -20,6 +20,12 @@ $stmt = $pdo->query("SELECT o.*, u.name AS customer, COUNT(oi.id) AS item_count
                     GROUP BY o.id
                     ORDER BY o.created_at DESC LIMIT 10");
 $orders = $stmt->fetchAll();
+
+// Revenue calculations
+// Total revenue: sum of order totals (excluding cancelled orders)
+$totalRevenue = $pdo->query("SELECT COALESCE(SUM(total),0) FROM orders WHERE status <> 'cancelled'")->fetchColumn();
+// Actual revenue: total minus shipping charges (excluding cancelled orders)
+$actualRevenue = $pdo->query("SELECT COALESCE(SUM(total - COALESCE(shipping_charge,0)),0) FROM orders WHERE status <> 'cancelled'")->fetchColumn();
 ?>
 
 <?php include '../includes/admin-header.php'; ?>
@@ -42,9 +48,24 @@ $orders = $stmt->fetchAll();
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card bg-info text-white p-4 rounded-3">
+        <div class="card bg-primary text-white p-4 rounded-3">
             <h5 class="mb-3">Total Customers</h5>
             <h3 class="mb-0"><?= $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'user'")->fetchColumn() ?></h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-4">
+    <div class="col-md-6">
+        <div class="card bg-primary text-white p-4 rounded-3">
+            <h5 class="mb-3">Total Revenue</h5>
+            <h3 class="mb-0">৳<?= number_format((float)$totalRevenue, 2) ?></h3>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-primary text-white p-4 rounded-3">
+            <h5 class="mb-3">Actual Revenue</h5>
+            <h3 class="mb-0">৳<?= number_format((float)$actualRevenue, 2) ?></h3>
         </div>
     </div>
 </div>

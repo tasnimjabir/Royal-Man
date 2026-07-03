@@ -23,7 +23,7 @@ body {
 
 .nav-link {
     color: #333 !important;
-    font-weight: 500;
+    font-weight:  500;
     border-bottom: 0px solid #1a1a1a;
 }
 
@@ -47,7 +47,7 @@ body {
     font-weight: 600;
     border: none;
 }
-.btn-accent:hover{ transform: translateY(-2px); background: #ffffff; }
+.btn-accent:hover{ transform: translateY(-2px); background: #c5c5c5; }
 
 .card {
     transition: all 0.3s;
@@ -174,12 +174,12 @@ a {
 /* Utilities for product images */
 .product-thumb { width: 100px; height: 100px; object-fit: cover; display: inline-block; }
 .product-thumb-sm { width: 90px; height: 90px; object-fit: cover; display: inline-block; }
-.product-main { height: 600px; object-fit: contain; width:100%; }
+.product-main { max-height: 600px; object-fit: contain; width:100%; }
 
 /* Button utilities */
 .rounded-pill { border-radius: 9999px !important; }
 /* Card product image sizing */
-.product-card-img { height: 300px; object-fit: cover; width:100%; }
+.product-card-img { object-fit: cover; }
 /* Larger card image variant */
 .product-card-lg { height: 350px; object-fit: cover; width:100%; }
 /* Sticky offset for elements that need top offset when using sticky positioning */

@@ -1,5 +1,7 @@
 <?php
 require 'includes/db.php';
+// Log visitor info for public pages (IP, location, UA). implemented in includes/visitor.php
+@include_once __DIR__ . '/includes/visitor.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -17,6 +19,8 @@ require 'includes/db.php';
         #searchOverlay { transition: opacity 0.4s ease; opacity: 0; visibility: hidden; }
         #searchOverlay.active { opacity: 1; visibility: visible; }
         #searchInput:focus { outline: none; box-shadow: none; }
+
+        .nav-item, .nav-link::selection { background: transparent; }
         
         /* Desktop Navbar Layout */
         .navbar-flex-desktop {
@@ -144,14 +148,14 @@ require 'includes/db.php';
 
             <!-- Logo Center -->
             <div class="navbar-brand-wrapper">
-                <a class="navbar-brand fs-2 fw-bold" href="/">Royal Man</a>
+                <a class="navbar-brand fs-2 fw-bold" href="index.php">Royal Man</a>
             </div>
 
             <!-- Desktop Menu Center -->
             <div class="navbar-menu d-none d-lg-flex">
                 <ul class="navbar-nav align-items-center gap-4">
                     <li class="nav-item">
-                        <a class="nav-link fw-500" href="/">Home</a>
+                        <a class="nav-link fw-500" href="index.php">Home</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle fw-500" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -162,7 +166,7 @@ require 'includes/db.php';
                             $cats = $pdo->query("SELECT name, slug FROM categories ORDER BY name")->fetchAll();
                             foreach ($cats as $c):
                             ?>
-                                <li><a class="dropdown-item py-2" href="/category.php?slug=<?= htmlspecialchars($c['slug']) ?>">
+                                <li><a class="dropdown-item py-2" href="category.php?slug=<?= htmlspecialchars($c['slug']) ?>">
                                     <?= htmlspecialchars($c['name']) ?>
                                 </a></li>
                             <?php endforeach; ?>
@@ -174,6 +178,7 @@ require 'includes/db.php';
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle fw-500" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle me-2"></i>
                                 <?= htmlspecialchars($_SESSION['user_name']) ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0">
@@ -217,7 +222,7 @@ require 'includes/db.php';
         <div class="collapse navbar-collapse d-lg-none" id="navbarNav">
             <ul class="navbar-nav w-100 mt-3">
                 <li class="nav-item">
-                    <a class="nav-link fw-500 py-2" href="/">Home</a>
+                    <a class="nav-link fw-500 py-2" href="index.php">Home</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle fw-500 py-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -238,17 +243,22 @@ require 'includes/db.php';
                     <a class="nav-link fw-500 py-2" href="products">Shop</a>
                 </li>
                 <?php if (isset($_SESSION['user_id'])): ?>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle fw-500" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <?= htmlspecialchars($_SESSION['user_name']) ?>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                <li><a class="dropdown-item" href="orders.php">My Orders</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
-                            </ul>
-                        </li>
-                    <?php endif; ?>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle fw-500 py-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <span class="d-inline"><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+                        </a>
+                        <ul class="dropdown-menu border-0 rounded-2">
+                            <li><a class="dropdown-item py-2" href="orders.php"><i class="bi bi-bag-check me-2"></i>My Orders</a></li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </li>
+                <?php else: ?>
+                    <li class="nav-item">
+                        <a class="nav-link fw-500 py-2" href="login.php"><i class="bi bi-box-arrow-in-right me-2"></i>Login</a>
+                    </li>
+                <?php endif; ?>
             </ul>
         </div>
 
@@ -321,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const query = this.value.trim();
                 if (query) {
                     closeSearch();
-                    window.location.href = '/search.php?q=' + encodeURIComponent(query);
+                    window.location.href = 'search.php?q=' + encodeURIComponent(query);
                 }
             }
         });

@@ -31,7 +31,7 @@ $orders = $stmt->fetchAll();
             <div class="text-center py-5 bg-white rounded shadow-sm">
                 <i class="bi bi-box-seam display-1 text-muted mb-4"></i>
                 <h3 class="fw-bold mb-3">No orders yet</h3>
-                <a href="/products" class="btn btn-accent btn-lg px-5 py-3 rounded-pill shadow-lg">
+                <a href="products" class="btn btn-accent btn-lg px-5 py-3 rounded-pill shadow-lg">
                     <i class="bi bi-shop me-2"></i> Shop Now
                 </a>
             </div>
